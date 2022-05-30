@@ -1,0 +1,12 @@
+---
+- name: Prune Docker content
+  community.docker.docker_prune:
+    containers: "{{ docker_prune_containers }}"
+    containers_filters: "{{ docker_prune_containers_filters | default(omit) }}"
+    images: "{{ docker_prune_images }}"
+    images_filters: "{{ docker_prune_images_filters | default(omit) }}"
+    networks: "{{ docker_prune_networks }}"
+    networks_filters: "{{ docker_prune_networks_filters | default(omit) }}"
+    volumes: "{{ docker_prune_volumes }}"
+    volumes_filters: "{{ docker_prune_volumes_filters | default(omit) }}"
+    builder_cache: "{{ docker_prune_builder_cache }}"

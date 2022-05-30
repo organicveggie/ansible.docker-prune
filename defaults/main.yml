@@ -1,0 +1,13 @@
+docker_prune_containers: "no"
+docker_prune_containers_filters: {}
+
+docker_prune_images: "no"
+docker_prune_images_filters: {}
+
+docker_prune_networks: "no"
+docker_prune_networks_filters: {}
+
+docker_prune_volumes: "no"
+docker_prune_volumes_filters: {}
+
+docker_prune_builder_cache: "no"

@@ -1,0 +1,5 @@
+---
+- import_tasks: prune.yml
+  tags:
+    - docker
+    - docker:prune

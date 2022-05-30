@@ -1,0 +1,45 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: false
+  
+  tasks:
+  - name: List containers
+    ansible.builtin.command: 'docker container ls --format \"\{\{.ID\}\}\"'
+    register: d_containers
+
+  - name: Assert no containers
+    ansible.builtin.assert:
+      that:
+        - not d_containers.failed
+        - not d_containers.stdout_lines
+
+  - name: List images
+    ansible.builtin.command: 'docker images -a --format \"\{\{.ID\}\}\"'
+    register: d_images
+
+  - name: Assert no images
+    ansible.builtin.assert:
+      that:
+        - not d_images.failed
+        - not d_images.stdout_lines
+
+  - name: List custom networks
+    ansible.builtin.command: 'docker network ls --filter type=custom --format \"\{\{.ID\}\}\"'
+    register: d_networks
+
+  - name: Assert no custom networks
+    ansible.builtin.assert:
+      that:
+        - not d_networks.failed
+        - not d_networks.stdout_lines
+
+  - name: List volumes
+    ansible.builtin.command: 'docker volume ls --format \"\{\{.ID\}\}\"'
+    register: d_volumes
+
+  - name: Assert no volumes
+    ansible.builtin.assert:
+      that:
+        - not d_volumes.failed
+        - not d_volumes.stdout_lines
