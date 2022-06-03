@@ -1,0 +1,86 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: false
+  
+  tasks:
+  - name: Check container alpine_one
+    community.docker.docker_container_info:
+      name: "alpine_one"
+    register: d_container_one
+
+  - name: Verify container alpine_one exists
+    ansible.builtin.assert:
+      that:
+        - not d_container_one.failed
+        - d_container_one.exists
+
+  - name: Check container centos_two
+    community.docker.docker_container_info:
+      name: "centos_two"
+    register: d_container_two
+
+  - name: Verify container centos_two does not exist
+    ansible.builtin.assert:
+      that:
+        - not d_container_one.failed
+        - not d_container_two.exists
+
+  - name: Check alpine image
+    community.docker.docker_image_info:
+      name: alpine
+    register: d_images_alpine
+
+  - name: Check centos image
+    community.docker.docker_image_info:
+      name: centos
+    register: d_images_centos
+
+  # - name: Debug
+  #   debug:
+  #     var: d_images_alpine
+  # - name: Debug
+  #   debug:
+  #     var: d_images_centos
+
+  - name: Verify alpine image exists locally
+    ansible.builtin.assert:
+      that:
+        - (d_images_alpine.images | default([])) | length > 0
+
+  - name: Verify centos image does not exist locally
+    ansible.builtin.assert:
+      that:
+        - (d_images_centos.images | default([])) | length == 0
+
+  - name: Check network_one
+    community.docker.docker_network_info:
+      name: "network_one"
+    register: d_network_one
+
+  - name: Check network_two
+    community.docker.docker_network_info:
+      name: "network_two"
+    register: d_network_two
+  
+  - name: Verify networks exist
+    ansible.builtin.assert:
+      that:
+        - d_network_one.exists
+        - d_network_two.exists
+
+  - name: Check volume_one
+    community.docker.docker_volume_info:
+      name: "volume_one"
+    register: d_vol_one
+
+  - name: Check volume_two
+    community.docker.docker_volume_info:
+      name: "volume_two"
+    register: d_vol_two
+  
+  - name: Verify volumes exist
+    ansible.builtin.assert:
+      that:
+        - d_vol_one.exists
+        - d_vol_two.exists
