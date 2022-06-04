@@ -1,0 +1,137 @@
+---
+- name: Converge prepare
+  hosts: all
+  become: true
+
+  vars:
+    pip_install_packages:
+      - name: docker
+
+  pre_tasks:
+    - name: Update apt cache
+      ansible.builtin.apt: update_cache=yes cache_valid_time=600
+      when: ansible_os_family == 'Debian'
+      tags:
+        - molecule-idempotence-notest
+
+    - name: Wait for systemd to complete initialization
+      command: systemctl is-system-running
+      register: systemctl_status
+      until: >
+        'running' in systemctl_status.stdout or
+        'degraded' in systemctl_status.stdout
+      retries: 30
+      delay: 5
+      when: ansible_service_mgr == 'systemd'
+      changed_when: false
+      failed_when: systemctl_status.rc > 1
+
+    - name: Install timezone data
+      ansible.builtin.apt:
+        name: tzdata
+        state: present
+      when: ansible_os_family == 'Debian'
+
+    - name: Set timezone to Asia/Tokyo
+      community.general.timezone:
+        name: Asia/Tokyo
+      when: ansible_os_family == 'Debian'
+
+  roles:
+    - role: geerlingguy.repo-epel
+      when: ansible_os_family == 'CentOS'
+    - geerlingguy.pip
+    - geerlingguy.docker
+  
+  tasks:
+    - name: Pull Docker images
+      community.docker.docker_image:
+        name: "{{ item }}"
+        source: pull
+      loop:
+        - alpine:latest
+    
+    - name: Create Docker networks
+      community.docker.docker_network:
+        name: "{{ item }}"
+      loop:
+        - network_one
+    
+    - name: Create Docker volumes
+      community.docker.docker_volume:
+        name: "{{ item }}"
+      loop:
+        - volume_one
+    
+    - name: Create Docker container alpine_one
+      community.docker.docker_container:
+        name: "alpine_one"
+        image: "alpine:latest"
+        pull: true
+        mounts:
+          - source: "volume_one"
+            target: "/mnt/volume1"
+            type: "volume"
+        networks:
+          - name: "network_one"
+        network_mode: "network_one"
+        container_default_behavior: no_defaults
+        restart_policy: unless-stopped
+        auto_remove: no
+        detach: yes
+        init: yes
+        interactive: no
+        paused: no
+        privileged: no
+        read_only: no
+        tty: no
+        state: "started"
+
+    - name: Create Docker container alpine_two
+      community.docker.docker_container:
+        name: "alpine_two"
+        image: "alpine:latest"
+        pull: true
+        container_default_behavior: no_defaults
+        restart_policy: unless-stopped
+        auto_remove: no
+        detach: yes
+        init: yes
+        interactive: no
+        paused: no
+        privileged: no
+        read_only: no
+        tty: no
+        state: "stopped"
+        
+    - name: Create Docker container alpine_three
+      community.docker.docker_container:
+        name: "alpine_three"
+        image: "alpine:latest"
+        pull: true
+        container_default_behavior: no_defaults
+        restart_policy: unless-stopped
+        labels:
+          pruneme: "bar"
+        auto_remove: no
+        detach: yes
+        init: yes
+        interactive: no
+        paused: no
+        privileged: no
+        read_only: no
+        tty: no
+        state: "stopped"
+      tags:
+        - molecule-idempotence-notest
+
+- name: Converge execute docker_prune phase 2
+  hosts: all
+  become: true
+  vars:
+    docker_prune_containers: "yes"
+    docker_prune_containers_filters:
+      label: "pruneme=bar"
+
+  roles:
+    - organicveggie.docker_prune

@@ -1,0 +1,69 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: false
+  
+  tasks:
+  # Phase 1
+  - name: Check container alpine_one
+    community.docker.docker_container_info:
+      name: "alpine_one"
+    register: d_container_one
+
+  - name: Verify container alpine_one exists
+    ansible.builtin.assert:
+      that:
+        - not d_container_one.failed
+        - d_container_one.exists
+
+  - name: Check container alpine_two
+    community.docker.docker_container_info:
+      name: "alpine_two"
+    register: d_container_a_two
+
+  - name: Verify container alpine_two exists
+    ansible.builtin.assert:
+      that:
+        - not d_container_a_two.failed
+        - d_container_a_two.exists
+
+  - name: Check container alpine_three
+    community.docker.docker_container_info:
+      name: "alpine_three"
+    register: d_container_three
+
+  - name: Verify container alpine_three does not exist
+    ansible.builtin.assert:
+      that:
+        - not d_container_three.failed
+        - not d_container_three.exists
+
+  - name: Check alpine image
+    community.docker.docker_image_info:
+      name: alpine
+    register: d_images_alpine
+
+  - name: Verify alpine image exists locally
+    ansible.builtin.assert:
+      that:
+        - (d_images_alpine.images | default([])) | length > 0
+
+  - name: Check network_one
+    community.docker.docker_network_info:
+      name: "network_one"
+    register: d_network_one
+
+  - name: Verify networks exist
+    ansible.builtin.assert:
+      that:
+        - d_network_one.exists
+
+  - name: Check volume_one
+    community.docker.docker_volume_info:
+      name: "volume_one"
+    register: d_vol_one
+
+  - name: Verify volumes exist
+    ansible.builtin.assert:
+      that:
+        - d_vol_one.exists
